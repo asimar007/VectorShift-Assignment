@@ -4,12 +4,25 @@ import {
     Button,
     Typography,
     Paper,
+    Chip,
 } from '@mui/material';
 import axios from 'axios';
 
 const endpointMapping = {
     'Notion': 'notion',
     'Airtable': 'airtable',
+    'Hubspot': 'hubspot',
+};
+
+// Helper function to colorize different data types
+const getValueColor = (value) => {
+    if (value === null) return '#808080'; // gray for null
+    switch (typeof value) {
+        case 'number': return '#0000ff'; // blue for numbers
+        case 'boolean': return '#008000'; // green for booleans
+        case 'string': return '#a31515'; // red for strings
+        default: return '#000000'; // black for objects/arrays
+    }
 };
 
 export const DataForm = ({ integrationType, credentials }) => {
@@ -28,13 +41,63 @@ export const DataForm = ({ integrationType, credentials }) => {
         }
     }
 
+    // Enhanced function to render JSON with syntax highlighting
+    const renderJsonValue = (value, indent = 0) => {
+        if (value === null) return <span style={{ color: getValueColor(value) }}>null</span>;
+
+        if (Array.isArray(value)) {
+            if (value.length === 0) return <span>[]</span>;
+
+            return (
+                <div style={{ marginLeft: indent > 0 ? 20 : 0 }}>
+                    <span>[</span>
+                    <div style={{ marginLeft: 20 }}>
+                        {value.map((item, index) => (
+                            <div key={index}>
+                                {renderJsonValue(item, indent + 1)}
+                                {index < value.length - 1 && <span>,</span>}
+                            </div>
+                        ))}
+                    </div>
+                    <span>]</span>
+                </div>
+            );
+        }
+
+        if (typeof value === 'object') {
+            const entries = Object.entries(value);
+            if (entries.length === 0) return <span>{'{}'}</span>;
+
+            return (
+                <div style={{ marginLeft: indent > 0 ? 20 : 0 }}>
+                    <span>{'{'}</span>
+                    <div style={{ marginLeft: 20 }}>
+                        {entries.map(([key, val], index) => (
+                            <div key={key}>
+                                <span style={{ color: '#881391', fontWeight: 'bold' }}>{`"${key}"`}</span>
+                                <span>{': '}</span>
+                                {renderJsonValue(val, indent + 1)}
+                                {index < entries.length - 1 && <span>,</span>}
+                            </div>
+                        ))}
+                    </div>
+                    <span>{'}'}</span>
+                </div>
+            );
+        }
+
+        if (typeof value === 'string') {
+            return <span style={{ color: getValueColor(value) }}>{`"${value}"`}</span>;
+        }
+
+        return <span style={{ color: getValueColor(value) }}>{String(value)}</span>;
+    };
+
     // Function to render the data in a more readable format
     const renderData = () => {
         if (!loadedData) return null;
 
         try {
-            // Format the JSON with indentation for better readability
-            const formattedData = JSON.stringify(loadedData, null, 2);
             return (
                 <Paper
                     elevation={3}
@@ -43,12 +106,27 @@ export const DataForm = ({ integrationType, credentials }) => {
                         mt: 2,
                         maxHeight: '400px',
                         overflow: 'auto',
-                        backgroundColor: '#f5f5f5'
+                        backgroundColor: '#f8f8f8',
+                        fontFamily: 'monospace',
+                        fontSize: '14px',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
                     }}
                 >
-                    <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-                        {formattedData}
-                    </pre>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                        <Typography variant="subtitle2" color="primary">
+                            {integrationType} Data
+                        </Typography>
+                        <Chip
+                            size="small"
+                            label={Array.isArray(loadedData) ? `${loadedData.length} items` : 'Object'}
+                            color="primary"
+                            variant="outlined"
+                        />
+                    </Box>
+                    <Box sx={{ mt: 1 }}>
+                        {renderJsonValue(loadedData)}
+                    </Box>
                 </Paper>
             );
         } catch (e) {
