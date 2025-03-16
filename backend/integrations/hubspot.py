@@ -22,7 +22,7 @@ CLIENT_ID = os.getenv('HUBSPOT_CLIENT_ID')
 CLIENT_SECRET = os.getenv('HUBSPOT_CLIENT_SECRET')
 REDIRECT_URI = 'http://localhost:8000/integrations/hubspot/oauth2callback'
 encoded_redirect = requests.utils.quote(REDIRECT_URI, safe='')
-authorization_url = f'https://app.hubspot.com/oauth/authorize?client_id={CLIENT_ID}&redirect_uri={encoded_redirect}&scope=crm.objects.contacts.read%20crm.objects.companies.read%20crm.objects.deals.read'
+authorization_url = f'https://app-na2.hubspot.com/oauth/authorize?client_id=3f416aa0-b98b-4f8e-85fc-f743eb6426a2&redirect_uri=http://localhost:8000/integrations/hubspot/oauth2callback&scope=oauth%20crm.objects.companies.read'
 
 async def authorize_hubspot(user_id, org_id):
     state_data = {
